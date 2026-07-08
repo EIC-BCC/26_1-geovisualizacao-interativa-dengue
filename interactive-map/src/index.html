@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avaliação de Usabilidade — Geovisualização da Dengue no Rio de Janeiro</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary:       #1a5276;
+            --primary-light: #2471a3;
+            --accent:        #16a085;
+            --accent-dark:   #138d75;
+            --bg:            #f4f6f8;
+            --card:          #ffffff;
+            --text:          #2c3e50;
+            --muted:         #6c757d;
+            --border:        #dee2e6;
+            --active-bg:     #e8f4fd;
+            --done-bg:       #d5f5e3;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* ── Header ──────────────────────────────── */
+        header {
+            background: var(--primary);
+            color: #fff;
+            padding: 1.25rem 1.5rem;
+            text-align: center;
+        }
+        header h1 { font-size: 1.25rem; font-weight: 700; }
+        header p  { font-size: 0.85rem; opacity: .85; margin-top: .2rem; }
+
+        /* ── Intro ───────────────────────────────── */
+        .intro {
+            max-width: 980px;
+            margin: 1.25rem auto;
+            padding: 1.1rem 1.5rem;
+            background: var(--card);
+            border-left: 4px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,.07);
+        }
+        .intro h2 {
+            font-size: .8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            margin-bottom: .45rem;
+        }
+        .intro p { font-size: .88rem; }
+        .intro p + p { margin-top: .4rem; }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+            margin-top: .75rem;
+        }
+        .badge {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: .3rem .75rem;
+            font-size: .78rem;
+            color: var(--muted);
+        }
+
+        /* ── Main two-column grid ─────────────────── */
+        .layout {
+            display: grid;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 .9rem 2rem;
+            gap: .9rem;
+        }
+        @media (min-width: 768px) {
+            .layout { grid-template-columns: 370px 1fr; align-items: start; }
+        }
+
+        /* ── Roteiro panel ────────────────────────── */
+        .roteiro-panel {
+            background: var(--card);
+            border-radius: 10px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.1);
+            overflow: hidden;
+        }
+        @media (min-width: 768px) {
+            .roteiro-panel {
+                position: sticky;
+                top: .9rem;
+                max-height: calc(100vh - 1.8rem);
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+        .roteiro-head {
+            background: var(--primary);
+            color: #fff;
+            padding: .9rem 1.1rem;
+            flex-shrink: 0;
+        }
+        .roteiro-head h2 { font-size: .95rem; font-weight: 600; }
+        .roteiro-head p  { font-size: .78rem; opacity: .82; margin-top: .15rem; }
+
+        /* Steps scroll area */
+        .steps-scroll {
+            overflow-y: auto;
+            flex: 1;
+        }
+        .steps-list { padding: .65rem; }
+
+        /* Individual step */
+        .step {
+            border-radius: 7px;
+            margin-bottom: .45rem;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: border-color .15s;
+        }
+        .step.active { border-color: var(--primary-light); box-shadow: 0 2px 8px rgba(26,82,118,.13); }
+        .step.done   { border-color: var(--accent); }
+
+        .step-head {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            padding: .65rem .9rem;
+            cursor: pointer;
+            background: var(--card);
+            user-select: none;
+        }
+        .step.active .step-head { background: var(--active-bg); }
+        .step.done   .step-head { background: var(--done-bg); }
+
+        .step-num {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: var(--border);
+            color: var(--muted);
+            font-size: .75rem;
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .step.active .step-num { background: var(--primary-light); color: #fff; }
+        .step.done   .step-num { background: var(--accent); color: #fff; }
+
+        .step-label {
+            font-size: .84rem;
+            font-weight: 600;
+            flex: 1;
+        }
+        .step-chevron {
+            font-size: .65rem;
+            color: var(--muted);
+            transition: transform .18s;
+            flex-shrink: 0;
+        }
+        .step.open .step-chevron { transform: rotate(180deg); }
+
+        .step-body {
+            display: none;
+            padding: 0 .9rem .85rem;
+            font-size: .83rem;
+            line-height: 1.72;
+        }
+        .step.open   .step-body { display: block; }
+        .step-body ul { padding-left: 1.1rem; margin: .35rem 0; }
+        .step-body li { margin-bottom: .25rem; }
+        .step-body strong { color: var(--primary); }
+
+        /* ── SUS call-to-action ───────────────────── */
+        .sus-section {
+            padding: .9rem;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .sus-btn {
+            display: block;
+            width: 100%;
+            padding: .8rem;
+            background: var(--accent);
+            color: #fff;
+            text-align: center;
+            border-radius: 7px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: .88rem;
+            transition: background .15s;
+        }
+        .sus-btn:hover { background: var(--accent-dark); }
+        .sus-note {
+            font-size: .72rem;
+            color: var(--muted);
+            margin-top: .45rem;
+            text-align: center;
+        }
+
+        /* ── Tool area ───────────────────────────── */
+        .tool-area {
+            background: var(--card);
+            border-radius: 10px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.1);
+            overflow: hidden;
+        }
+        .tool-bar {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .6rem 1.1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: .82rem;
+            color: var(--muted);
+        }
+        .tool-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+        .tool-iframe {
+            width: 100%;
+            border: none;
+            display: block;
+        }
+        @media (min-width: 768px) {
+            .tool-iframe { height: calc(100vh - 120px); min-height: 520px; }
+        }
+        @media (max-width: 767px) {
+            .tool-iframe { height: 100vh; min-height: 730px; }
+        }
+
+        /* ── Footer ──────────────────────────────── */
+        footer {
+            text-align: center;
+            padding: 1.25rem;
+            font-size: .75rem;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── Mobile intro ────────────────────────── */
+        @media (max-width: 767px) {
+            .intro { margin: .9rem; border-radius: 8px; }
+            header h1 { font-size: 1.05rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Geovisualização Interativa da Dengue no Rio de Janeiro</h1>
+    <p>Avaliação de Usabilidade — Trabalho de Conclusão de Curso</p>
+</header>
+
+<div class="intro">
+    <h2>Apresentação</h2>
+    <p>Esta aplicação exibe a distribuição geográfica de casos de dengue no município do Rio de Janeiro entre os anos de 2014 e 2023, por meio de um mapa de calor (heatmap) tridimensional baseado em hexágonos.</p>
+    <p>Ao final da exploração, você será convidado(a) a responder às perguntas do <strong>System Usability Scale (SUS)</strong>. Não existe resposta certa ou errada — o objetivo é compreender sua experiência real de uso.</p>
+    <div class="badges">
+        <span class="badge">Exploração: 5–10 min</span>
+        <span class="badge">Questionário SUS: 3–5 min</span>
+    </div>
+</div>
+
+<div class="layout">
+
+    <!-- ── Roteiro ── -->
+    <aside class="roteiro-panel">
+        <div class="roteiro-head">
+            <h2 id="roteiro-title">Carregando roteiro…</h2>
+            <p  id="roteiro-sub"></p>
+        </div>
+
+        <div class="steps-scroll">
+            <div class="steps-list" id="steps-list"></div>
+        </div>
+
+        <div class="sus-section">
+            <a href="https://forms.gle/rCA69vQKKFCRcmMZA" target="_blank" rel="noopener" class="sus-btn">
+                Responder ao Question&#225;rio SUS
+            </a>
+            <p class="sus-note">Complete a explora&#231;&#227;o da aplica&#231;&#227;o antes de responder.</p>
+        </div>
+    </aside>
+
+    <!-- ── Ferramenta ── -->
+    <div class="tool-area">
+        <div class="tool-bar">
+            <span class="tool-dot"></span>
+            Heatmap de Casos de Dengue — Rio de Janeiro (2014–2023)
+        </div>
+        <iframe
+            class="tool-iframe"
+            src="https://observablehq.com/embed/cc1baecb8d21afc0?cells=container%2Cviewof+anoSelecionado%2CradiusSlider%2Cradius%2CupperPercentileSlider%2CupperPercentile"
+            title="Geovisualiza&#231;&#227;o Interativa da Dengue"
+            loading="lazy"
+            allowfullscreen
+        ></iframe>
+    </div>
+
+</div>
+
+<footer>
+    Trabalho de Conclus&#227;o de Curso — Geovisualiza&#231;&#227;o Interativa da Dengue no Rio de Janeiro
+</footer>
+
+<script>
+(function () {
+    // ── Conteúdo dos roteiros ──────────────────────────────────────
+
+    var ROTEIRO_DESKTOP = {
+        title: 'Roteiro A — Desktop',
+        sub:   'Versão para computador',
+        steps: [
+            {
+                label: 'Antes de começar',
+                body:  '<p>Aguarde o carregamento completo do mapa antes de iniciar.</p>'
+            },
+            {
+                label: 'Passo 1 — Observe o panorama geral',
+                body:  '<p>Ao abrir a aplicação, você verá um heatmap tridimensional do Rio de Janeiro com colunas hexagonais coloridas representando a concentração de casos de dengue.</p>'
+                     + '<ul>'
+                     + '<li>Observe a distribuição das colunas pela cidade.</li>'
+                     + '<li>Identifique quais regiões apresentam maior concentração de casos (colunas mais altas e/ou mais intensas).</li>'
+                     + '<li>O ano exibido inicialmente é <strong>2023</strong>.</li>'
+                     + '</ul>'
+            },
+            {
+                label: 'Passo 2 — Navegue pelo mapa',
+                body:  '<p>Explore o mapa utilizando os seguintes controles:</p>'
+                     + '<ul>'
+                     + '<li><strong>Zoom:</strong> role o scroll do mouse para aproximar e afastar. Ou use as teclas <strong>+</strong> e <strong>−</strong>.</li>'
+                     + '<li><strong>Arrastar:</strong> clique e arraste com o botão <strong>esquerdo</strong> para mover o mapa. Ou use as teclas direcionais <strong>↑↓←→</strong>.</li>'
+                     + '<li><strong>Girar:</strong> clique e arraste com o botão <strong>direito</strong> (ou <strong>Ctrl + arrastar</strong>) para rotacionar o mapa.</li>'
+                     + '<li><strong>Inclinar (tilt):</strong> com o mapa rotacionado, explore a perspectiva tridimensional das colunas.</li>'
+                     + '</ul>'
+            },
+            {
+                label: 'Passo 3 — Explore os dados por ano',
+                body:  '<ul>'
+                     + '<li>Localize o <strong>seletor de ano</strong> na aplicação.</li>'
+                     + '<li>Clique no dropdown e selecione o ano <strong>2016</strong>.</li>'
+                     + '<li>Observe como o mapa é atualizado.</li>'
+                     + '<li>Experimente pelo menos <strong>mais dois anos</strong> de sua escolha, comparando a distribuição e a intensidade dos casos entre os períodos.</li>'
+                     + '<li>Retorne ao ano <strong>2023</strong> ao final.</li>'
+                     + '</ul>'
+            },
+            {
+                label: 'Passo 4 — Exploração livre',
+                body:  '<p>Navegue livremente pela aplicação por alguns minutos. Explore as regiões e anos que considerar mais relevantes, combinando os controles de navegação com a troca de ano conforme desejar.</p>'
+            },
+            {
+                label: 'Passo 5 — Responda ao questionário',
+                body:  '<p>Ao concluir a exploração, clique no botão abaixo para responder ao questionário <strong>System Usability Scale (SUS)</strong>.</p>'
+            }
+        ]
+    };
+
+    var ROTEIRO_MOBILE = {
+        title: 'Roteiro B — Mobile',
+        sub:   'Versão para smartphone ou tablet',
+        steps: [
+            {
+                label: 'Antes de começar',
+                body:  '<p>Recomenda-se deixar o dispositivo na orientação <strong>vertical (retrato)</strong>. Aguarde o carregamento completo do mapa antes de iniciar.</p>'
+            },
+            {
+                label: 'Passo 1 — Observe o panorama geral',
+                body:  '<p>Ao abrir a aplicação, você verá um heatmap tridimensional do Rio de Janeiro com colunas hexagonais coloridas representando a concentração de casos de dengue.</p>'
+                     + '<ul>'
+                     + '<li>Observe a distribuição das colunas pela cidade.</li>'
+                     + '<li>Identifique quais regiões apresentam maior concentração de casos (colunas mais altas e/ou mais intensas).</li>'
+                     + '<li>O ano exibido inicialmente é <strong>2023</strong>.</li>'
+                     + '</ul>'
+            },
+            {
+                label: 'Passo 2 — Navegue pelo mapa',
+                body:  '<p>Explore o mapa utilizando gestos de toque:</p>'
+                     + '<ul>'
+                     + '<li><strong>Arrastar:</strong> toque com um dedo e deslize para mover o mapa e explorar diferentes áreas da cidade.</li>'
+                     + '<li><strong>Zoom:</strong> aproxime ou afaste dois dedos simultaneamente (gesto de <strong>pinça</strong>) para ampliar ou reduzir a visualização.</li>'
+                     + '<li><strong>Girar:</strong> posicione dois dedos na tela e gire-os como se estivesse abrindo uma tampa — o mapa irá rotacionar acompanhando o movimento.</li>'
+                     + '<li><strong>Inclinar (tilt):</strong> toque com <strong>três dedos</strong> e deslize para cima ou para baixo para ajustar a inclinação da perspectiva tridimensional.</li>'
+                     + '</ul>'
+            },
+            {
+                label: 'Passo 3 — Explore os dados por ano',
+                body:  '<ul>'
+                     + '<li>Localize o <strong>seletor de ano</strong> na aplicação.</li>'
+                     + '<li>Toque no dropdown e selecione o ano <strong>2016</strong>.</li>'
+                     + '<li>Observe como o mapa é atualizado.</li>'
+                     + '<li>Experimente pelo menos <strong>mais dois anos</strong> de sua escolha, comparando a distribuição e a intensidade dos casos entre os períodos.</li>'
+                     + '<li>Retorne ao ano <strong>2023</strong> ao final.</li>'
+                     + '</ul>'
+            },
+            {
+                label: 'Passo 4 — Exploração livre',
+                body:  '<p>Navegue livremente pela aplicação por alguns minutos. Explore as regiões e anos que considerar mais relevantes, combinando os gestos de navegação com a troca de ano conforme desejar.</p>'
+            },
+            {
+                label: 'Passo 5 — Responda ao questionário',
+                body:  '<p>Ao concluir a exploração, toque no botão abaixo para responder ao questionário <strong>System Usability Scale (SUS)</strong>.</p>'
+            }
+        ]
+    };
+
+    // ── Detecção de dispositivo ────────────────────────────────────
+
+    var mobileRE = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+    var isMobile = mobileRE.test(navigator.userAgent) || window.innerWidth < 768;
+    var roteiro  = isMobile ? ROTEIRO_MOBILE : ROTEIRO_DESKTOP;
+    var steps    = roteiro.steps;
+
+    // ── Renderização ───────────────────────────────────────────────
+
+    document.getElementById('roteiro-title').textContent = roteiro.title;
+    document.getElementById('roteiro-sub').textContent   = roteiro.sub;
+
+    function render() {
+        var list = document.getElementById('steps-list');
+        list.innerHTML = '';
+
+        steps.forEach(function (step, i) {
+            var numLabel = (i === 0) ? '★' : String(i);
+
+            var div = document.createElement('div');
+            div.className = 'step' + (i === 0 ? ' active open' : '');
+            div.id = 'step-' + i;
+            div.innerHTML =
+                '<div class="step-head" onclick="toggleStep(' + i + ')">'
+                + '<span class="step-num">' + numLabel + '</span>'
+                + '<span class="step-label">' + step.label + '</span>'
+                + '<span class="step-chevron">&#9660;</span>'
+                + '</div>'
+                + '<div class="step-body">' + step.body + '</div>';
+
+            list.appendChild(div);
+        });
+
+        // On desktop, open all steps by default
+        if (window.innerWidth >= 768) {
+            var allSteps = list.querySelectorAll('.step');
+            allSteps.forEach(function (s) { s.classList.add('open'); });
+        }
+    }
+
+    // ── Público: toggle desktop accordion ─────────────────────────
+
+    window.toggleStep = function (i) {
+        var el = document.getElementById('step-' + i);
+        if (!el) return;
+        el.classList.toggle('open');
+        // Marca como active ao abrir
+        if (el.classList.contains('open')) {
+            document.querySelectorAll('.step.active').forEach(function(s) { s.classList.remove('active'); });
+            el.classList.add('active');
+        }
+    };
+
+    // ── Init ───────────────────────────────────────────────────────
+
+    render();
+}());
+</script>
+
+</body>
+</html>

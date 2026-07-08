@@ -1,0 +1,14 @@
+{
+  "name": "cc1baecb8d21afc0",
+  "main": "cc1baecb8d21afc0@447.js",
+  "version": "447.0.0",
+  "homepage": "https://observablehq.com/d/cc1baecb8d21afc0",
+  "author": {
+    "name": "Gabriel Moraes",
+    "url": "https://observablehq.com/@gabriel-moraes"
+  },
+  "type": "module",
+  "peerDependencies": {
+    "@observablehq/runtime": "4 - 5"
+  }
+}
